@@ -216,7 +216,8 @@ int encoder_compress_buffer(struct encoder_t *encoder, struct device_t *dev, uns
 	else if (encoder->run->type == ENCODER_TYPE_OMX) {
 		LOG_VERBOSE("Compressing buffer %u using OMX", buf_index);
 		if (omx_encoder_compress_buffer(encoder->run->omxs[worker_number], dev, buf_index) < 0) {
-			goto error;
+			LOG_INFO("Error while compressing buffer, falling back to CPU");
+			cpu_encoder_compress_buffer(dev, buf_index, encoder->run->quality);
 		}
 	}
 #	endif
@@ -227,15 +228,4 @@ int encoder_compress_buffer(struct encoder_t *encoder, struct device_t *dev, uns
 	dev->run->pictures[buf_index]->height = dev->run->height;
 
 	return 0;
-
-#	pragma GCC diagnostic ignored "-Wunused-label"
-#	pragma GCC diagnostic push
-	// cppcheck-suppress unusedLabel
-	error:
-		LOG_INFO("Error while compressing buffer, falling back to CPU");
-		A_MUTEX_LOCK(&encoder->run->mutex);
-		encoder->run->cpu_forced = true;
-		A_MUTEX_UNLOCK(&encoder->run->mutex);
-		return -1;
-#	pragma GCC diagnostic pop
 }

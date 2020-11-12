@@ -456,8 +456,7 @@ static void *_worker_thread(void *v_worker) {
 
 			LOG_DEBUG("Worker %u compressing JPEG from buffer %u ...", worker->number, worker->buf_index);
 
-			worker->job_failed = (bool)encoder_compress_buffer(worker->encoder, worker->dev, worker->number, worker->buf_index);
-
+			encoder_compress_buffer(worker->encoder, worker->dev, worker->number, worker->buf_index);
 			if (device_release_buffer(worker->dev, worker->buf_index) == 0) {
 				if (!worker->job_failed) {
 					worker->job_start_ts = PICTURE(encode_begin_ts);
