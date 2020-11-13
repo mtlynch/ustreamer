@@ -237,13 +237,13 @@ int omx_encoder_compress_buffer(struct omx_encoder_t *omx, struct device_t *dev,
 			}
 		}
 
-		// vcos_semaphore_wait(&omx->handler_sem);
-		switch (sem_status = vcos_semaphore_wait_timeout(&omx->handler_sem, 3000)) {
-			case VCOS_SUCCESS: break;
-			case VCOS_EAGAIN: LOG_ERROR("Can't wait VCOS semaphore: EAGAIN (timeout)"); return -1;
-			case VCOS_EINVAL: LOG_ERROR("Can't wait VCOS semaphore: EINTVAL"); return -1;
-			default: LOG_ERROR("Can't wait VCOS semaphore: %d", sem_status); return -1;
-		}
+		// BUG: This is a temporary workaround for an issue with waiting on the
+		// semaphore while there's a change to system time. If the system time
+		// changes during a wait, vcos_semaphore_wait will return EAGAIN, so we're
+		// temporarily ignoring the return value until we figure out a way to make
+		// the wait call robust to concurrent changes to the device's system time.
+		// See: https://github.com/pikvm/ustreamer/issues/56
+		vcos_semaphore_wait(&omx->handler_sem);
 	}
 
 #	undef OUT
